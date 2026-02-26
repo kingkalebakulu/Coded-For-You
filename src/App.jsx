@@ -395,6 +395,8 @@ function LoadingScreen({ onDone }) {
 function Navbar({ onBooking }) {
   const scrolled = useScrolled(50);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [hoveredLink, setHoveredLink] = useState(null);
+  const [hoveredMobileLink, setHoveredMobileLink] = useState(null);
   const isMobile = useIsMobile();
 
   const navLinks = useMemo(() => [
@@ -406,6 +408,18 @@ function Navbar({ onBooking }) {
     { label: "FAQ", href: "#faq" },
     { label: "Contact", href: "#contact" },
   ], []);
+
+  // Instant scroll — bypasses smooth-scroll CSS, closes menu first on mobile
+  const scrollTo = (e, href) => {
+    e.preventDefault();
+    setMobileOpen(false);
+    const id = href.replace("#", "");
+    const el = document.getElementById(id);
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 72; // 72 = navbar height
+      window.scrollTo({ top, behavior: "instant" });
+    }
+  };
 
   return (
     <motion.nav
@@ -424,7 +438,7 @@ function Navbar({ onBooking }) {
     >
       <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 72 }}>
         {/* Logo */}
-        <a href="#" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
+        <a href="#" onClick={e => scrollTo(e, "#")} style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}>
           <div style={{ position: "relative", perspective: "300px" }}>
             <motion.div
               animate={{ rotateY: [0, 8, 0, -8, 0], rotateX: [0, 3, 0, -3, 0] }}
@@ -446,10 +460,22 @@ function Navbar({ onBooking }) {
         {!isMobile && (
           <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
             {navLinks.map(l => (
-              <a key={l.label} href={l.href} style={{ color: "rgba(255,255,255,0.7)", textDecoration: "none", fontFamily: "'Exo 2', sans-serif", fontSize: 14, fontWeight: 500, letterSpacing: "0.05em", transition: "color 0.3s" }}
-                onMouseEnter={e => e.target.style.color = "#00B4FF"}
-                onMouseLeave={e => e.target.style.color = "rgba(255,255,255,0.7)"}
-              >{l.label}</a>
+              <a
+                key={l.label}
+                href={l.href}
+                onClick={e => scrollTo(e, l.href)}
+                onMouseEnter={() => setHoveredLink(l.label)}
+                onMouseLeave={() => setHoveredLink(null)}
+                style={{
+                  color: hoveredLink === l.label ? "#00B4FF" : "rgba(255,255,255,0.7)",
+                  textDecoration: "none",
+                  fontFamily: "'Exo 2', sans-serif",
+                  fontSize: 14, fontWeight: 500, letterSpacing: "0.05em",
+                  transition: "color 0.2s"
+                }}
+              >
+                {l.label}
+              </a>
             ))}
             <ElectricButton href={waLink("Hi! I'd like to learn more about Coded For You's services.")} variant="primary">
               <MessageCircle size={14} /> Get Started
@@ -457,10 +483,10 @@ function Navbar({ onBooking }) {
           </div>
         )}
 
-        {/* Mobile hamburger — always rendered, visibility by JS */}
+        {/* Mobile hamburger */}
         {isMobile && (
           <button
-            onClick={() => setMobileOpen(!mobileOpen)}
+            onClick={() => setMobileOpen(o => !o)}
             style={{
               background: "rgba(0,180,255,0.1)", border: "1px solid rgba(0,180,255,0.3)",
               borderRadius: 8, color: "#00B4FF", cursor: "pointer",
@@ -480,18 +506,48 @@ function Navbar({ onBooking }) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            style={{ background: "rgba(5,5,5,0.98)", borderBottom: "1px solid rgba(0,180,255,0.1)", padding: "16px 24px 24px", overflow: "hidden" }}
+            transition={{ duration: 0.22, ease: "easeInOut" }}
+            style={{
+              background: "rgba(5,5,5,0.98)",
+              borderBottom: "1px solid rgba(0,180,255,0.15)",
+              overflow: "hidden"
+            }}
           >
-            {navLinks.map(l => (
-              <a key={l.label} href={l.href} onClick={() => setMobileOpen(false)}
-                style={{ display: "block", color: "rgba(255,255,255,0.8)", textDecoration: "none", padding: "12px 0", fontFamily: "'Exo 2', sans-serif", fontSize: 15, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                {l.label}
-              </a>
-            ))}
-            <div style={{ marginTop: 16 }}>
-              <ElectricButton href={waLink("Hi! I'd like to learn more about Coded For You's services.")}>
-                <MessageCircle size={14} /> Get Started
-              </ElectricButton>
+            <div style={{ padding: "8px 24px 24px" }}>
+              {navLinks.map(l => (
+                <a
+                  key={l.label}
+                  href={l.href}
+                  onClick={e => scrollTo(e, l.href)}
+                  onMouseEnter={() => setHoveredMobileLink(l.label)}
+                  onMouseLeave={() => setHoveredMobileLink(null)}
+                  onTouchStart={() => setHoveredMobileLink(l.label)}
+                  onTouchEnd={() => setHoveredMobileLink(null)}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    color: hoveredMobileLink === l.label ? "#00B4FF" : "rgba(255,255,255,0.8)",
+                    textDecoration: "none",
+                    padding: "14px 0",
+                    fontFamily: "'Exo 2', sans-serif", fontSize: 15, fontWeight: 500,
+                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    transition: "color 0.2s",
+                    letterSpacing: "0.03em"
+                  }}
+                >
+                  {l.label}
+                  <ArrowRight size={14} style={{
+                    opacity: hoveredMobileLink === l.label ? 1 : 0,
+                    color: "#00B4FF",
+                    transition: "opacity 0.2s",
+                    flexShrink: 0
+                  }} />
+                </a>
+              ))}
+              <div style={{ marginTop: 20 }}>
+                <ElectricButton href={waLink("Hi! I'd like to learn more about Coded For You's services.")}>
+                  <MessageCircle size={14} /> Get Started
+                </ElectricButton>
+              </div>
             </div>
           </motion.div>
         )}
@@ -2054,28 +2110,21 @@ function FAQ() {
 
   return (
     <section id="faq" style={{ padding: "120px 24px", position: "relative", overflow: "hidden" }}>
-      {/* subtle bg radial */}
       <div style={{
         position: "absolute", inset: 0,
         background: "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,180,255,0.04) 0%, transparent 70%)",
         pointerEvents: "none"
       }} />
-
       <div style={{ maxWidth: 800, margin: "0 auto", position: "relative" }}>
 
-        {/* ── Section header ── */}
+        {/* Header */}
         <div style={{ textAlign: "center", marginBottom: 64 }}>
-          <span style={{
-            color: "#00B4FF", fontFamily: "'Exo 2', sans-serif",
-            fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase"
-          }}>
+          <span style={{ color: "#00B4FF", fontFamily: "'Exo 2', sans-serif", fontSize: 12, letterSpacing: "0.15em", textTransform: "uppercase" }}>
             GOT QUESTIONS?
           </span>
           <h2 style={{
-            fontFamily: "'Orbitron', sans-serif",
-            fontSize: isMobile ? 28 : 42,
-            fontWeight: 800, color: "#fff",
-            marginTop: 12, marginBottom: 16, lineHeight: 1.15
+            fontFamily: "'Orbitron', sans-serif", fontSize: isMobile ? 28 : 42,
+            fontWeight: 800, color: "#fff", marginTop: 12, marginBottom: 16, lineHeight: 1.15
           }}>
             Frequently Asked <span style={{ color: "#00B4FF" }}>Questions</span>
           </h2>
@@ -2084,7 +2133,7 @@ function FAQ() {
           </p>
         </div>
 
-        {/* ── Accordion ── */}
+        {/* Accordion */}
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {FAQ_ITEMS.map((item, i) => {
             const isOpen = open === i;
@@ -2095,13 +2144,11 @@ function FAQ() {
                 style={{
                   background: isOpen ? "rgba(0,180,255,0.06)" : "rgba(255,255,255,0.03)",
                   border: `1px solid ${isOpen ? "rgba(0,180,255,0.35)" : "rgba(255,255,255,0.07)"}`,
-                  borderRadius: 12,
-                  cursor: "pointer",
+                  borderRadius: 12, cursor: "pointer",
                   transition: "background 0.25s, border-color 0.25s",
                   overflow: "hidden"
                 }}
               >
-                {/* Question row */}
                 <div style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: isMobile ? "18px 20px" : "22px 28px", gap: 16
@@ -2114,7 +2161,6 @@ function FAQ() {
                   }}>
                     {item.q}
                   </span>
-                  {/* +/× icon */}
                   <div style={{
                     width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
                     background: isOpen ? "rgba(0,180,255,0.2)" : "rgba(255,255,255,0.06)",
@@ -2129,19 +2175,11 @@ function FAQ() {
                     </svg>
                   </div>
                 </div>
-
-                {/* Answer — CSS height animation */}
-                <div style={{
-                  maxHeight: isOpen ? 300 : 0,
-                  overflow: "hidden",
-                  transition: "max-height 0.35s ease"
-                }}>
+                <div style={{ maxHeight: isOpen ? 300 : 0, overflow: "hidden", transition: "max-height 0.35s ease" }}>
                   <div style={{
                     padding: isMobile ? "0 20px 18px" : "0 28px 22px",
-                    color: "rgba(255,255,255,0.6)",
-                    fontSize: isMobile ? 13 : 15,
-                    lineHeight: 1.75,
-                    borderTop: "1px solid rgba(0,180,255,0.1)"
+                    color: "rgba(255,255,255,0.6)", fontSize: isMobile ? 13 : 15,
+                    lineHeight: 1.75, borderTop: "1px solid rgba(0,180,255,0.1)"
                   }}>
                     <div style={{ paddingTop: 16 }}>{item.a}</div>
                   </div>
@@ -2151,7 +2189,7 @@ function FAQ() {
           })}
         </div>
 
-        {/* ── Bottom CTA nudge ── */}
+        {/* Bottom CTA */}
         <div style={{ textAlign: "center", marginTop: 56 }}>
           <p style={{ color: "rgba(255,255,255,0.4)", fontSize: 15, marginBottom: 20 }}>
             Still have questions? We're a message away.
