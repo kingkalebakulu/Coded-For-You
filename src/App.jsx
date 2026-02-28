@@ -1518,44 +1518,71 @@ function WhyUs() {
           </div>
         )}
 
-        {/* ── MOBILE: vertical process cards with accent number ── */}
+        {/* ── MOBILE: centre-line timeline matching desktop style ── */}
         {isMobile && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {steps.map((step, i) => (
-              <motion.div
-                key={step.number}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.07 }}
-                style={{
-                  display: "flex", gap: 0, borderRadius: 16, overflow: "hidden",
-                  background: "rgba(255,255,255,0.04)",
-                  backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-                  border: `1px solid ${step.color}22`,
-                  boxShadow: `0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06)`,
-                }}
-              >
-                {/* Accent left stripe with icon */}
-                <div style={{
-                  width: 56, flexShrink: 0,
-                  background: `linear-gradient(180deg, ${step.color}22, ${step.color}08)`,
-                  borderRight: `1px solid ${step.color}25`,
-                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                  gap: 8, padding: "16px 0",
-                }}>
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: `${step.color}20`, border: `1px solid ${step.color}50`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <step.icon size={15} color={step.color} />
+          <div style={{ position: "relative" }}>
+            {/* Vertical centre line */}
+            <div style={{
+              position: "absolute", left: 20, top: 0, bottom: 0, width: 2,
+              background: "linear-gradient(to bottom, transparent, rgba(0,180,255,0.4) 8%, rgba(0,180,255,0.4) 92%, transparent)",
+              pointerEvents: "none"
+            }} />
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 20, paddingLeft: 0 }}>
+              {steps.map((step, i) => (
+                <motion.div
+                  key={step.number}
+                  initial={{ opacity: 0, x: -24 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.07 }}
+                  style={{ display: "flex", alignItems: "flex-start", gap: 14 }}
+                >
+                  {/* Icon node on the line */}
+                  <div style={{
+                    width: 40, height: 40, borderRadius: "50%", flexShrink: 0,
+                    background: `${step.color}18`,
+                    border: `2px solid ${step.color}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: `0 0 16px ${step.color}44`,
+                    backdropFilter: "blur(10px)",
+                    zIndex: 1, position: "relative"
+                  }}>
+                    <step.icon size={17} color={step.color} />
                   </div>
-                  <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 10, color: step.color, fontWeight: 900, letterSpacing: "0.05em", opacity: 0.8 }}>{step.number}</div>
-                </div>
-                {/* Content */}
-                <div style={{ flex: 1, padding: "16px 16px 16px 14px" }}>
-                  <h3 style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 12, color: "#fff", fontWeight: 700, marginBottom: 8, lineHeight: 1.4 }}>{step.title}</h3>
-                  <p style={{ color: "rgba(255,255,255,0.5)", fontFamily: "'Exo 2', sans-serif", fontSize: 12, lineHeight: 1.65 }}>{step.desc}</p>
-                </div>
-              </motion.div>
-            ))}
+
+                  {/* Card */}
+                  <div style={{
+                    flex: 1,
+                    background: "rgba(255,255,255,0.04)",
+                    backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)",
+                    border: `1px solid ${step.color}28`,
+                    borderRadius: 14,
+                    padding: "14px 16px",
+                    boxShadow: "0 4px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06)",
+                  }}>
+                    <div style={{
+                      fontFamily: "'Orbitron', sans-serif", fontSize: 9,
+                      color: step.color, letterSpacing: "0.2em", marginBottom: 6, opacity: 0.8
+                    }}>
+                      STEP {step.number}
+                    </div>
+                    <h3 style={{
+                      fontFamily: "'Orbitron', sans-serif", fontSize: 11,
+                      color: "#fff", fontWeight: 700, marginBottom: 6, lineHeight: 1.4
+                    }}>
+                      {step.title}
+                    </h3>
+                    <p style={{
+                      color: "rgba(255,255,255,0.52)", fontFamily: "'Exo 2', sans-serif",
+                      fontSize: 11.5, lineHeight: 1.65
+                    }}>
+                      {step.desc}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         )}
       </div>
