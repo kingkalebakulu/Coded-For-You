@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Globe, MessageSquare, Calendar, Share2, Mail, Search, Bot,
-  Users, X, Send, Star, Menu, ArrowRight, Zap, Shield, TrendingUp,
+  Globe, Calendar, Share2, Mail, Search, Bot,
+  Users, X, Star, Menu, ArrowRight, Zap, Shield, TrendingUp,
   ChevronDown, CheckCircle, Cpu, BarChart2, Headphones,
   Instagram, MessageCircle,
   Clock, DollarSign, Target, Eye
@@ -2223,299 +2223,36 @@ function BookingModal({ service, onClose }) {
   );
 }
 
-// ─── LIVE CHATBOT ────────────────────────────────────────────────────────────
-const CFY_SYSTEM_PROMPT = `You are Zara, the friendly AI assistant for Coded For You — a South African AI automation agency. You help website visitors learn about services, answer questions, and guide them toward booking a consultation via WhatsApp.
-
-ABOUT CODED FOR YOU:
-- AI automation agency based in South Africa
-- WhatsApp: +27 61 922 9670
-- Instagram: @CodedForYou.codes
-- Email: coded.for.you.king@gmail.com
-
-SERVICES OFFERED (9 services):
-1. AI Website Chatbots — 24/7 lead capture bots for websites
-2. WhatsApp Automation — automated replies, follow-ups, broadcasts
-3. Automated Appointment Booking — online booking, reminders, calendar sync
-4. Customer Support Bots — resolve 80% of queries instantly
-5. Social Media Management — content creation, scheduling, engagement
-6. Lead Generation & Follow-Up — drip campaigns, auto follow-ups
-7. Email Marketing Workflows — sequences, segmentation, A/B testing
-8. SEO & Blog Automation — AI content, keyword research, rank tracking
-9. Custom AI Virtual Assistants — branded AI trained on your business
-
-KEY RESULTS: 340% avg lead increase, 60% cost reduction, 24/7 automated operations, 80% auto-resolution of queries.
-
-YOUR PERSONALITY:
-- Warm, professional, helpful, enthusiastic about AI
-- Use short paragraphs, max 3-4 sentences per reply
-- Use occasional emojis to keep it friendly (not excessive)
-- Always end responses by offering to connect them to WhatsApp or asking a follow-up question
-- If someone seems ready to buy, direct them to WhatsApp immediately
-- Never make up prices — say pricing depends on scope and to chat on WhatsApp for a custom quote
-
-NAVIGATION HELP:
-- About section → #about
-- Services → #services
-- Our Work/Gallery → #gallery
-- Why Choose Us → #why-us
-- Testimonials → #testimonials
-- Contact → #contact`;
-
+// ─── VOICEFLOW CHATBOT ───────────────────────────────────────────────────────
 function Chatbot() {
-  const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content: "Hey! 👋 I'm Zara, your CFY assistant. I can help you learn about our AI automation services, answer questions, or guide you to the right section. What brings you here today?"
-    }
-  ]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [unread, setUnread] = useState(1);
-  const endRef = useRef(null);
-  const inputRef = useRef(null);
-
   useEffect(() => {
-    if (open) {
-      setUnread(0);
-      setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
-      setTimeout(() => inputRef.current?.focus(), 200);
-    }
-  }, [open, messages]);
+    // Avoid double-loading if script already injected
+    if (document.getElementById("voiceflow-script")) return;
 
-  // Pulse open after 8s to draw attention
-  useEffect(() => {
-    const t = setTimeout(() => setUnread(u => u > 0 ? u : 1), 8000);
-    return () => clearTimeout(t);
+    const script = document.createElement("script");
+    script.id = "voiceflow-script";
+    script.type = "text/javascript";
+    script.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs";
+
+    script.onload = function () {
+      if (window.voiceflow && window.voiceflow.chat) {
+        window.voiceflow.chat.load({
+          verify: { projectID: "69a1fc68ab953545e0f46003" },
+          url: "https://general-runtime.voiceflow.com",
+          versionID: "production",
+          voice: {
+            url: "https://runtime-api.voiceflow.com"
+          }
+        });
+      }
+    };
+
+    // Mirror Voiceflow's own embed pattern — insertBefore first script tag
+    const firstScript = document.getElementsByTagName("script")[0];
+    firstScript.parentNode.insertBefore(script, firstScript);
   }, []);
 
-  const sendText = async (text) => {
-    if (!text || loading) return;
-    setInput("");
-    const newMessages = [...messages, { role: "user", content: text }];
-    setMessages(newMessages);
-    setLoading(true);
-
-    try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 400,
-          system: CFY_SYSTEM_PROMPT,
-          messages: newMessages.map(m => ({ role: m.role, content: m.content }))
-        })
-      });
-      const data = await res.json();
-      const reply = data.content?.[0]?.text || "Sorry, I had trouble connecting. Please reach out on WhatsApp directly! 📱";
-      setMessages(m => [...m, { role: "assistant", content: reply }]);
-    } catch {
-      setMessages(m => [...m, { role: "assistant", content: "Looks like I lost connection 😅 You can reach us directly on WhatsApp at +27 61 922 9670!" }]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const send = () => sendText(input.trim());
-  const onKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } };
-
-  const quickReplies = ["What services do you offer?", "How much does it cost?", "Book a consultation", "Show me your work"];
-
-  return (
-    <>
-      {/* ── Floating bubble ── */}
-      <motion.button
-        onClick={() => setOpen(o => !o)}
-        animate={!open && unread > 0 ? { scale: [1, 1.12, 1] } : {}}
-        transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-        style={{
-          position: "fixed", bottom: 28, right: 28, zIndex: 999,
-          width: 60, height: 60, borderRadius: "50%", border: "none", cursor: "pointer",
-          background: "linear-gradient(135deg, #00B4FF, #0055FF)",
-          boxShadow: "0 0 30px rgba(0,180,255,0.5), 0 8px 32px rgba(0,0,0,0.4)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          transition: "transform 0.2s"
-        }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.92 }}
-      >
-        <AnimatePresence mode="wait">
-          <motion.div key={open ? "close" : "chat"} initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}>
-            {open ? <X size={22} color="#fff" /> : <MessageSquare size={22} color="#fff" />}
-          </motion.div>
-        </AnimatePresence>
-        {!open && unread > 0 && (
-          <div style={{
-            position: "absolute", top: -4, right: -4, width: 18, height: 18,
-            background: "#FF4444", borderRadius: "50%", border: "2px solid #050505",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 10, color: "#fff", fontFamily: "'Exo 2', sans-serif", fontWeight: 700
-          }}>{unread}</div>
-        )}
-      </motion.button>
-
-      {/* ── Chat window ── */}
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.94 }}
-            transition={{ type: "spring", damping: 28, stiffness: 320 }}
-            style={{
-              position: "fixed", bottom: 100, right: 28, zIndex: 998,
-              width: "min(380px, calc(100vw - 40px))",
-              borderRadius: 20, overflow: "hidden",
-              background: "rgba(8,10,20,0.92)",
-              backdropFilter: "blur(32px)",
-              WebkitBackdropFilter: "blur(32px)",
-              border: "1px solid rgba(0,180,255,0.2)",
-              boxShadow: "0 0 60px rgba(0,180,255,0.12), 0 24px 64px rgba(0,0,0,0.7)",
-              display: "flex", flexDirection: "column",
-              maxHeight: "min(560px, calc(100vh - 130px))"
-            }}
-          >
-            {/* Header */}
-            <div style={{
-              padding: "16px 20px", display: "flex", alignItems: "center", gap: 12,
-              borderBottom: "1px solid rgba(0,180,255,0.1)",
-              background: "rgba(0,180,255,0.06)"
-            }}>
-              <div style={{ position: "relative" }}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: "50%",
-                  background: "linear-gradient(135deg, #00B4FF, #0055FF)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: "0 0 16px rgba(0,180,255,0.4)"
-                }}>
-                  <Bot size={20} color="#fff" />
-                </div>
-                <div style={{
-                  position: "absolute", bottom: 1, right: 1, width: 10, height: 10,
-                  background: "#00C896", borderRadius: "50%", border: "2px solid rgba(8,10,20,0.9)"
-                }} />
-              </div>
-              <div>
-                <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 13, color: "#fff", fontWeight: 700 }}>Zara</div>
-                <div style={{ fontFamily: "'Exo 2', sans-serif", fontSize: 11, color: "#00C896" }}>● Online — CFY Assistant</div>
-              </div>
-              <button onClick={() => setOpen(false)} style={{ marginLeft: "auto", background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", padding: 4 }}>
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* Messages */}
-            <div className="chat-messages" style={{ flex: 1, overflowY: "auto", padding: "16px 16px 8px", display: "flex", flexDirection: "column", gap: 10 }}>
-              {messages.map((m, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25 }}
-                  style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}
-                >
-                  {m.role === "assistant" && (
-                    <div style={{
-                      width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-                      background: "linear-gradient(135deg, #00B4FF, #0055FF)",
-                      display: "flex", alignItems: "center", justifyContent: "center", marginRight: 8, alignSelf: "flex-end"
-                    }}>
-                      <Bot size={13} color="#fff" />
-                    </div>
-                  )}
-                  <div style={{
-                    maxWidth: "78%", borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                    padding: "10px 14px",
-                    background: m.role === "user"
-                      ? "linear-gradient(135deg, #00B4FF, #0055FF)"
-                      : "rgba(255,255,255,0.06)",
-                    border: m.role === "user" ? "none" : "1px solid rgba(255,255,255,0.08)",
-                    color: "#fff", fontFamily: "'Exo 2', sans-serif", fontSize: 13, lineHeight: 1.6,
-                    whiteSpace: "pre-wrap"
-                  }}>
-                    {m.content}
-                  </div>
-                </motion.div>
-              ))}
-
-              {/* Typing indicator */}
-              {loading && (
-                <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, #00B4FF, #0055FF)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                    <Bot size={13} color="#fff" />
-                  </div>
-                  <div style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "16px 16px 16px 4px", padding: "12px 16px", display: "flex", gap: 4 }}>
-                    {[0,1,2].map(i => (
-                      <motion.div key={i} animate={{ y: [0, -6, 0] }} transition={{ repeat: Infinity, duration: 0.8, delay: i * 0.15 }}
-                        style={{ width: 6, height: 6, borderRadius: "50%", background: "#00B4FF" }} />
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div ref={endRef} />
-            </div>
-
-            {/* Quick replies */}
-            {messages.length <= 2 && !loading && (
-              <div style={{ padding: "0 12px 8px", display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {quickReplies.map(q => (
-                  <button key={q} onClick={() => sendText(q)}
-                    style={{
-                      background: "rgba(0,180,255,0.08)", border: "1px solid rgba(0,180,255,0.25)",
-                      borderRadius: 99, padding: "5px 12px", color: "#00B4FF",
-                      fontFamily: "'Exo 2', sans-serif", fontSize: 11, cursor: "pointer",
-                      transition: "all 0.2s", whiteSpace: "nowrap"
-                    }}
-                    onMouseEnter={e => e.target.style.background = "rgba(0,180,255,0.16)"}
-                    onMouseLeave={e => e.target.style.background = "rgba(0,180,255,0.08)"}
-                  >{q}</button>
-                ))}
-              </div>
-            )}
-
-            {/* Input */}
-            <div style={{
-              padding: "10px 12px 12px",
-              borderTop: "1px solid rgba(0,180,255,0.08)",
-              display: "flex", gap: 8, alignItems: "flex-end"
-            }}>
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={onKey}
-                placeholder="Ask Zara anything..."
-                rows={1}
-                style={{
-                  flex: 1, background: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(0,180,255,0.2)", borderRadius: 12,
-                  padding: "10px 14px", color: "#fff", fontFamily: "'Exo 2', sans-serif", fontSize: 13,
-                  outline: "none", resize: "none", lineHeight: 1.5,
-                  maxHeight: 80, overflowY: "auto"
-                }}
-              />
-              <motion.button
-                onClick={send}
-                disabled={!input.trim() || loading}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  width: 40, height: 40, borderRadius: "50%", border: "none", cursor: input.trim() && !loading ? "pointer" : "default",
-                  background: input.trim() && !loading ? "linear-gradient(135deg, #00B4FF, #0055FF)" : "rgba(255,255,255,0.08)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: input.trim() ? "0 0 16px rgba(0,180,255,0.35)" : "none",
-                  transition: "all 0.2s", flexShrink: 0
-                }}
-              >
-                <Send size={16} color={input.trim() && !loading ? "#fff" : "rgba(255,255,255,0.3)"} />
-              </motion.button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
-  );
+  return null;
 }
 
 // ─── APP ─────────────────────────────────────────────────────────────────────
@@ -2586,14 +2323,13 @@ export default function App() {
             <CTA />
           </main>
           <Footer />
+          <Chatbot />
         </motion.div>
       )}
 
       <AnimatePresence>
         {booking && <BookingModal service={booking} onClose={() => setBooking(null)} />}
       </AnimatePresence>
-
-      <Chatbot />
     </>
   );
 }
