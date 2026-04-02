@@ -2251,7 +2251,6 @@ function BookingModal({ service, onClose }) {
 }
 
 // ─── APEX CHATBOT ────────────────────────────────────────────────────────────
-// Lazy-loaded so it doesn't block the initial page render
 import ApexChatbot from "./components/ApexChatbot";
 
 // ─── APP ─────────────────────────────────────────────────────────────────────
