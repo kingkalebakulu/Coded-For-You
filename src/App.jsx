@@ -2250,37 +2250,9 @@ function BookingModal({ service, onClose }) {
   );
 }
 
-// ─── VOICEFLOW CHATBOT ───────────────────────────────────────────────────────
-function Chatbot() {
-  useEffect(() => {
-    // Avoid double-loading if script already injected
-    if (document.getElementById("voiceflow-script")) return;
-
-    const script = document.createElement("script");
-    script.id = "voiceflow-script";
-    script.type = "text/javascript";
-    script.src = "https://cdn.voiceflow.com/widget-next/bundle.mjs";
-
-    script.onload = function () {
-      if (window.voiceflow && window.voiceflow.chat) {
-        window.voiceflow.chat.load({
-          verify: { projectID: "69a1fc68ab953545e0f46003" },
-          url: "https://general-runtime.voiceflow.com",
-          versionID: "production",
-          voice: {
-            url: "https://runtime-api.voiceflow.com"
-          }
-        });
-      }
-    };
-
-    // Mirror Voiceflow's own embed pattern — insertBefore first script tag
-    const firstScript = document.getElementsByTagName("script")[0];
-    firstScript.parentNode.insertBefore(script, firstScript);
-  }, []);
-
-  return null;
-}
+// ─── APEX CHATBOT ────────────────────────────────────────────────────────────
+// Lazy-loaded so it doesn't block the initial page render
+import ApexChatbot from "./components/ApexChatbot";
 
 // ─── APP ─────────────────────────────────────────────────────────────────────
 export default function App() {
@@ -2350,7 +2322,7 @@ export default function App() {
             <CTA />
           </main>
           <Footer />
-          <Chatbot />
+          <ApexChatbot />
         </motion.div>
       )}
 
