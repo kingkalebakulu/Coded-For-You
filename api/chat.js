@@ -1,12 +1,12 @@
 const SYSTEM_PROMPT = `You are Apex, the intelligent AI assistant for Coded For You — a premium AI automation agency. 
 Your goal is to help businesses automate tasks, convert leads, and scale using AI.
-- WhatsApp: +27 85 905 7756
+- WhatsApp: +27 84 905 7756
 - Email: coded.for.you.king@gmail.com
 - Instagram: @CodedForYou.codes
 Keep responses professional, concise (2-4 sentences), and always encourage a WhatsApp consultation.`;
 
 export default async function handler(req, res) {
-  // 1. Setup CORS so your website can talk to this API
+  // 1. Setup CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -17,15 +17,15 @@ export default async function handler(req, res) {
   const { messages } = req.body;
 
   try {
-    // 2. Call the xAI (Grok) API
+    // 2. Call the xAI API
     const response = await fetch("https://api.x.ai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.XAI_API_KEY}` // MATCHES YOUR VERCEL SETTING
+        "Authorization": `Bearer ${process.env.XAI_API_KEY}` // Matches your Vercel Environment Variable
       },
       body: JSON.stringify({
-        model: "grok-4.20-reasoning", // Latest April 2026 flagship model
+        model: "grok-latest", // Using 'latest' is safer to avoid "Invalid Argument" errors
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           ...messages
@@ -35,16 +35,14 @@ export default async function handler(req, res) {
       })
     });
 
-    // 3. Handle Errors
+    const data = await response.json();
+
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Grok Error:", errorData);
-      return res.status(response.status).json({ error: "Grok rejected the request.", details: errorData });
+      console.error("Grok Error:", data);
+      return res.status(response.status).json({ error: "Grok rejected the request.", details: data });
     }
 
-    const data = await response.json();
     const reply = data.choices[0].message.content;
-
     return res.status(200).json({ reply });
 
   } catch (err) {
