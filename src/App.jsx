@@ -45,7 +45,7 @@ function useScrolled(threshold = 50) {
 // ─── LOGO ───────────────────────────────────────────────────────────────────
 const LOGO_SRC = "/logo.png";
 // ─── DATA ────────────────────────────────────────────────────────────────────
-const WHATSAPP_NUMBER = "27619229670";
+const WHATSAPP_NUMBER = "27849057756";
 const GMAIL = "coded.for.you.king@gmail.com";
 const INSTAGRAM = "CodedForYou.codes";
 
@@ -1635,7 +1635,7 @@ function ContactSection() {
     {
       icon: MessageCircle,
       label: "WhatsApp",
-      sub: "+27 61 922 9670",
+      sub: "+27 84 905 7756",
       desc: "Fastest response — usually within minutes",
       href: waLink("Hi! I'd like to get in touch with Coded For You."),
       color: "#25D366",
