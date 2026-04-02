@@ -13,7 +13,7 @@ Company overview:
 Coded For You (CFY) is an AI automation agency founded to help businesses of all sizes leverage artificial intelligence to automate repetitive tasks, convert more leads, and operate more efficiently. We work with clients globally, with a strong presence in South Africa.
 
 Contact & Socials:
-- WhatsApp: +27 61 922 9670
+- WhatsApp: +27 84 905 7756
 - Email: coded.for.you.king@gmail.com
 - Instagram: @CodedForYou.codes
 
